@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/ToastProvider";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { Input } from "@/components/ui/Input";
-import { Mail, Lock, User, Loader2 } from "lucide-react";
+import { Mail, Lock, User, Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function SignUpPage() {
   const { language } = useTranslation();
@@ -19,6 +19,7 @@ export default function SignUpPage() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -122,9 +123,19 @@ export default function SignUpPage() {
 
           <Input
             id="signup-password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder={language === "en" ? "Password" : "Contraseña"}
             icon={<Lock size={18} />}
+            rightElement={
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-base-content/40 hover:text-base-content/70 focus:outline-none transition-colors flex items-center justify-center"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            }
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required

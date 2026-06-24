@@ -42,11 +42,19 @@ export default function SignUpPage() {
     });
 
     if (error) {
+      let errorMessage = error.message;
+      if (!errorMessage || errorMessage === "{}" || errorMessage === "null") {
+        errorMessage =
+          language === "en"
+            ? "SMTP configuration or network error. Please check your Supabase Auth logs."
+            : "Error de configuración SMTP o de red. Por favor verifica los logs de Supabase Auth.";
+      }
+
       toast({
         title:
           language === "en"
-            ? `Sign up failed: ${error.message}`
-            : `Error al registrarse: ${error.message}`,
+            ? `Sign up failed: ${errorMessage}`
+            : `Error al registrarse: ${errorMessage}`,
         type: "error",
       });
       setLoading(false);

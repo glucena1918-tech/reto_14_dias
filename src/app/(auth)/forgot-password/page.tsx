@@ -24,15 +24,23 @@ export default function ForgotPasswordPage() {
     const origin = window.location.origin;
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: `${origin}/auth/callback?next=/reset-password`,
     });
 
     if (error) {
+      let errorMessage = error.message;
+      if (!errorMessage || errorMessage === "{}" || errorMessage === "null") {
+        errorMessage =
+          language === "en"
+            ? "SMTP configuration or network error. Please check your Supabase Auth logs."
+            : "Error de configuración SMTP o de red. Por favor verifica los logs de Supabase Auth.";
+      }
+
       toast({
         title:
           language === "en"
-            ? `Error: ${error.message}`
-            : `Error: ${error.message}`,
+            ? `Error: ${errorMessage}`
+            : `Error: ${errorMessage}`,
         type: "error",
       });
       setLoading(false);

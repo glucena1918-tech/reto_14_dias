@@ -12,9 +12,12 @@ export async function GET(request: Request) {
 
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
+    } else {
+      console.error("Error exchanging code for session in auth/callback:", error);
     }
   }
 
   // If no code or exchange failed, redirect to login with error
+  console.warn("Auth callback failed: Code is missing or exchange failed. Redirecting to login.");
   return NextResponse.redirect(`${origin}/login?error=auth-link-failed`);
 }

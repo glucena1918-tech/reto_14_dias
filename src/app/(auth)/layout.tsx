@@ -4,6 +4,16 @@ import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-base-100">
+      {/* Background Image with dark overlay */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src="/background.jpg"
+          alt="Background"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-base-100/80 backdrop-blur-[1px]" />
+      </div>
+
       {/* Language Switcher — top right */}
       <div className="absolute top-6 right-6 z-30">
         <LanguageSwitcher />

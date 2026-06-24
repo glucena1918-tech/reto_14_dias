@@ -17,10 +17,19 @@ export default function WelcomeContent({ firstName }: WelcomeContentProps) {
   const router = useRouter();
 
   const handleSignOut = async () => {
+    try {
+      // Clear cookies and session on the server side
+      await fetch("/auth/signout", { method: "POST" });
+    } catch (error) {
+      console.error("Error signing out on server:", error);
+    }
+
+    // Also sign out on the client side to clear memory
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
+
+    // Use full reload to clear all Next.js router cache and ensure cookies are updated
+    window.location.href = "/login";
   };
 
   return (

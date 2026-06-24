@@ -70,8 +70,12 @@ export default function SignUpPage() {
       <GlassCard className="p-8 sm:p-10">
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-primary via-accent-pink to-accent-warm flex items-center justify-center animate-pulse-glow">
-            <span className="text-2xl font-bold text-white">M</span>
+          <div className="relative w-24 h-24 rounded-2xl overflow-hidden border border-base-content/10 shadow-lg flex items-center justify-center bg-base-200 animate-pulse-glow">
+            <img
+              src="/logo.jpg"
+              alt="GL Logo"
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
 

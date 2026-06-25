@@ -1,34 +1,48 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #050014;
-  --color-foreground: #E8E0FF;
-  --color-base-100: #050014;
-  --color-base-200: #0A0520;
-  --color-base-300: #150D30;
-  --color-base-content: #E8E0FF;
-  --color-primary: #7C3AED;
-  --color-primary-content: #FFFFFF;
-  --color-accent-warm: #F97316;
-  --color-accent-pink: #EC4899;
-  --color-accent-blue: #38BDF8;
+  --color-background: var(--theme-background);
+  --color-foreground: var(--theme-foreground);
+  --color-base-100: var(--theme-base-100);
+  --color-base-200: var(--theme-base-200);
+  --color-base-300: var(--theme-base-300);
+  --color-base-content: var(--theme-base-content);
+  --color-primary: var(--theme-primary);
+  --color-primary-content: var(--theme-primary-content);
+  --color-accent-warm: var(--theme-accent-warm);
+  --color-accent-pink: var(--theme-accent-pink);
+  --color-accent-blue: var(--theme-accent-blue);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+:root {
+  --theme-background: #050014;
+  --theme-foreground: #E8E0FF;
+  --theme-base-100: #050014;
+  --theme-base-200: #0A0520;
+  --theme-base-300: #150D30;
+  --theme-base-content: #E8E0FF;
+  --theme-primary: #7C3AED;
+  --theme-primary-content: #FFFFFF;
+  --theme-accent-warm: #F97316;
+  --theme-accent-pink: #EC4899;
+  --theme-accent-blue: #38BDF8;
+}
+
 /* ── Light Theme Override ── */
 [data-theme="light"] {
-  --color-background: #F8F6FF;
-  --color-foreground: #1A1035;
-  --color-base-100: #F8F6FF;
-  --color-base-200: #EFEBFA;
-  --color-base-300: #E0DBF0;
-  --color-base-content: #1A1035;
-  --color-primary: #7C3AED;
-  --color-primary-content: #FFFFFF;
-  --color-accent-warm: #EA580C;
-  --color-accent-pink: #DB2777;
-  --color-accent-blue: #0284C7;
+  --theme-background: #F8F6FF;
+  --theme-foreground: #1A1035;
+  --theme-base-100: #F8F6FF;
+  --theme-base-200: #EFEBFA;
+  --theme-base-300: #E0DBF0;
+  --theme-base-content: #1A1035;
+  --theme-primary: #7C3AED;
+  --theme-primary-content: #FFFFFF;
+  --theme-accent-warm: #EA580C;
+  --theme-accent-pink: #DB2777;
+  --theme-accent-blue: #0284C7;
 }
 
 [data-theme="light"] .glass-card {

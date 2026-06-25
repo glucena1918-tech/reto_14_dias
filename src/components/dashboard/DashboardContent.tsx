@@ -288,6 +288,7 @@ export function DashboardContent() {
   const [activeModal, setActiveModal] = useState<"campaign" | "export" | "invitations" | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
   const [activities, setActivities] = useState(ACTIVITIES);
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
 
   // Form states
   const [campaignName, setCampaignName] = useState("");
@@ -836,6 +837,7 @@ export function DashboardContent() {
                 const count = emails.length;
                 let successes = 0;
                 let lastError = "";
+                let lastActionLink = "";
 
                 // Send invitations using server action
                 for (const email of emails) {
@@ -843,6 +845,9 @@ export function DashboardContent() {
                     const result = await inviteUser(email, inviteRole);
                     if (result.success) {
                       successes++;
+                      if (result.actionLink) {
+                        lastActionLink = result.actionLink;
+                      }
                     } else {
                       lastError = result.error || "Unknown error";
                     }
@@ -850,6 +855,10 @@ export function DashboardContent() {
                     console.error("Invite call failed:", err);
                     lastError = err.message || "Failed to call invitation endpoint";
                   }
+                }
+
+                if (lastActionLink) {
+                  setGeneratedLink(lastActionLink);
                 }
 
                 if (successes > 0) {
@@ -933,6 +942,51 @@ export function DashboardContent() {
                 </GlowButton>
               </div>
             </form>
+          </GlassCard>
+        </div>
+      )}
+
+      {/* ─── Copy Fallback Link Modal ─── */}
+      {generatedLink && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <GlassCard className="w-full max-w-md p-6 sm:p-8 relative animate-fade-in">
+            <button
+              onClick={() => setGeneratedLink(null)}
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-base-content/40 hover:text-base-content/70 hover:bg-white/5 transition-colors cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+            <h3 className="text-lg font-bold gradient-text mb-4">
+              {language === "en" ? "Invitation Link Generated" : "Enlace de Invitación Generado"}
+            </h3>
+            <p className="text-xs text-base-content/60 mb-4 leading-relaxed">
+              {language === "en"
+                ? "The invitation email was triggered. If delivery is delayed by provider limits, you can copy this link and send it manually:"
+                : "Se ha solicitado el envío del correo de invitación. Si este tarda en llegar debido a los límites de Supabase, puedes copiar este enlace y enviarlo manualmente:"}
+            </p>
+            <div className="flex gap-2 mb-6">
+              <input
+                type="text"
+                readOnly
+                value={generatedLink}
+                className="flex-1 px-3 py-2.5 text-xs text-base-content/85 bg-base-300 border border-white/10 rounded-xl select-all focus:outline-none"
+              />
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(generatedLink);
+                  setToast({
+                    message: language === "en" ? "Copied to clipboard!" : "¡Copiado al portapapeles!",
+                    type: "success",
+                  });
+                }}
+                className="px-4 py-2.5 text-xs font-semibold rounded-xl bg-primary text-white hover:bg-primary/80 transition-colors cursor-pointer"
+              >
+                {language === "en" ? "Copy" : "Copiar"}
+              </button>
+            </div>
+            <GlowButton onClick={() => setGeneratedLink(null)} className="w-full py-3 text-xs">
+              {language === "en" ? "Close" : "Cerrar"}
+            </GlowButton>
           </GlassCard>
         </div>
       )}

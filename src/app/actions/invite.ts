@@ -25,19 +25,50 @@ export async function inviteUser(email: string, role: string) {
   const protocol = host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https";
   const siteUrl = `${protocol}://${host}`;
 
-  // Call the inviteUserByEmail admin method
-  const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+  // 1. Generate the invitation link as a secure fallback (this creates the user in auth.users without SMTP limits)
+  let actionLink = "";
+  try {
+    const linkResult = await supabaseAdmin.auth.admin.generateLink({
+      type: "invite",
+      email: email,
+      options: {
+        redirectTo: `${siteUrl}/auth/callback`,
+        data: {
+          role: role,
+        },
+      },
+    });
+
+    if (linkResult.data?.properties?.action_link) {
+      actionLink = linkResult.data.properties.action_link;
+    }
+  } catch (err) {
+    console.error("Error generating backup invite link:", err);
+  }
+
+  // 2. Call inviteUserByEmail so Supabase attempts to deliver the email
+  const inviteResult = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
     data: {
       role: role,
     },
-    // Dynamically direct user back to the application auth callback
     redirectTo: `${siteUrl}/auth/callback`,
   });
 
-  if (error) {
-    console.error("Supabase invite error:", error);
-    return { success: false, error: error.message };
+  if (inviteResult.error) {
+    console.error("Supabase email delivery failed:", inviteResult.error);
+    
+    // If email sending failed (e.g. rate limit), but we generated the fallback link,
+    // we return success along with the link so the administrator can invite them manually!
+    if (actionLink) {
+      return { 
+        success: true, 
+        actionLink, 
+        message: "Email delivery rate limited by Supabase. Fallen back to direct link." 
+      };
+    }
+    
+    return { success: false, error: inviteResult.error.message };
   }
 
-  return { success: true, data };
+  return { success: true, data: inviteResult.data, actionLink };
 }

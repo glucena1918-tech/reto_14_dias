@@ -10,6 +10,7 @@ import {
   ChevronsRight,
   X,
   Sparkles,
+  User,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -36,7 +37,16 @@ export function Sidebar({
     },
   ];
 
+  const accountItems = [
+    {
+      href: "/profile",
+      label: language === "en" ? "Profile" : "Perfil",
+      icon: User,
+    },
+  ];
+
   const sectionLabel = language === "en" ? "Micro Apps" : "Micro Apps";
+  const accountLabel = language === "en" ? "Account" : "Cuenta";
 
   const isActive = (href: string) => pathname === href;
 
@@ -68,6 +78,37 @@ export function Sidebar({
           )}
 
           {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => {
+                  if (isMobile) onCloseMobile();
+                }}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                  active
+                    ? "bg-primary/15 text-primary shadow-[0_0_20px_rgba(124,58,237,0.1)]"
+                    : "text-base-content/50 hover:text-base-content/80 hover:bg-white/5",
+                  !showLabels && "justify-center px-0"
+                )}
+              >
+                <Icon size={18} className="shrink-0" />
+                {showLabels && <span className="whitespace-nowrap">{item.label}</span>}
+              </Link>
+            );
+          })}
+
+          {/* Account section */}
+          {showLabels && (
+            <p className="px-3 mt-5 mb-2 text-[10px] font-semibold uppercase tracking-widest text-base-content/30">
+              {accountLabel}
+            </p>
+          )}
+
+          {accountItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
             return (

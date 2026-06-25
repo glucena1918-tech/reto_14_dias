@@ -3,12 +3,14 @@
 import { useState, type ReactNode } from "react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
+import { UserProfileProvider } from "@/context/UserProfileContext";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
+    <UserProfileProvider>
     <div className="fixed inset-0 w-full h-dvh flex overflow-hidden z-0">
       {/* Sidebar */}
       <Sidebar
@@ -61,5 +63,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </main>
       </div>
     </div>
+    </UserProfileProvider>
   );
 }

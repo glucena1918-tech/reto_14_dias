@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useUserProfile } from "@/context/UserProfileContext";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { Input } from "@/components/ui/Input";
 import {
@@ -48,59 +50,13 @@ const NOTIFICATIONS = [
 export function Header({ onToggleMobileSidebar }: HeaderProps) {
   const { language } = useTranslation();
   const router = useRouter();
-
-  const [userName, setUserName] = useState("");
-  const [userInitials, setUserInitials] = useState("");
-  const [userEmail, setUserEmail] = useState("");
+  const { profile } = useUserProfile();
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
 
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
-
-  // Fetch real user data
-  useEffect(() => {
-    const fetchUser = async () => {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        setUserEmail(user.email || "");
-
-        // Try to get name from users table
-        const { data: profile } = await supabase
-          .from("users")
-          .select("first_name, last_name")
-          .eq("id", user.id)
-          .single();
-
-        const firstName =
-          profile?.first_name ||
-          user.user_metadata?.first_name ||
-          "";
-        const lastName =
-          profile?.last_name ||
-          user.user_metadata?.last_name ||
-          "";
-
-        if (firstName || lastName) {
-          setUserName(`${firstName} ${lastName}`.trim());
-          setUserInitials(
-            `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
-          );
-        } else if (user.email) {
-          const name = user.email.split("@")[0];
-          setUserName(name);
-          setUserInitials(name.charAt(0).toUpperCase());
-        }
-      }
-    };
-
-    fetchUser();
-  }, []);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -240,11 +196,20 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
             }}
             className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-white/5 transition-all cursor-pointer"
           >
-            <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-accent-pink flex items-center justify-center text-xs font-bold text-white shrink-0">
-              {userInitials || "?"}
-            </div>
+            {/* Avatar — show image if available, otherwise initials */}
+            {profile.avatarUrl ? (
+              <img
+                src={profile.avatarUrl}
+                alt="Avatar"
+                className="w-8 h-8 rounded-full object-cover shrink-0"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-accent-pink flex items-center justify-center text-xs font-bold text-white shrink-0">
+                {profile.userInitials || "?"}
+              </div>
+            )}
             <span className="hidden md:block text-sm text-base-content/70 max-w-24 truncate">
-              {userName}
+              {profile.userName}
             </span>
             <ChevronDown
               size={14}
@@ -256,24 +221,38 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
           {profileOpen && (
             <div className="absolute right-0 top-12 w-56 rounded-2xl bg-[#0A0520] border border-white/20 shadow-2xl overflow-hidden animate-fade-in">
               {/* User info */}
-              <div className="px-4 py-3 border-b border-white/5">
-                <p className="text-sm font-semibold text-base-content truncate">
-                  {userName}
-                </p>
-                <p className="text-xs text-base-content/40 truncate">
-                  {userEmail}
-                </p>
+              <div className="px-4 py-3 border-b border-white/5 flex items-center gap-3">
+                {profile.avatarUrl ? (
+                  <img
+                    src={profile.avatarUrl}
+                    alt="Avatar"
+                    className="w-9 h-9 rounded-full object-cover shrink-0"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-linear-to-br from-primary to-accent-pink flex items-center justify-center text-xs font-bold text-white shrink-0">
+                    {profile.userInitials || "?"}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-base-content truncate">
+                    {profile.userName}
+                  </p>
+                  <p className="text-xs text-base-content/40 truncate">
+                    {profile.userEmail}
+                  </p>
+                </div>
               </div>
 
               {/* Menu items */}
               <div className="py-1">
-                <button
+                <Link
+                  href="/profile"
                   onClick={() => setProfileOpen(false)}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-base-content/60 hover:text-base-content hover:bg-white/5 transition-all cursor-pointer"
                 >
                   <User size={16} />
                   {language === "en" ? "Profile" : "Perfil"}
-                </button>
+                </Link>
                 <button
                   onClick={() => setProfileOpen(false)}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-base-content/60 hover:text-base-content hover:bg-white/5 transition-all cursor-pointer"

@@ -629,35 +629,110 @@ export function DashboardContent() {
               {language === "en" ? "Export Performance Report" : "Exportar Informe de Rendimiento"}
             </h3>
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
                 setIsExporting(true);
-                setTimeout(() => {
-                  const reportTypeName = {
-                    general: language === "en" ? "General Performance" : "Rendimiento General",
-                    conversions: language === "en" ? "Conversions" : "Conversiones",
-                    campaigns: language === "en" ? "Campaigns" : "Campañas",
-                    billing: language === "en" ? "Billing" : "Facturación",
-                  }[exportType as "general" | "conversions" | "campaigns" | "billing"];
 
-                  const content = `Report: ${reportTypeName}\nRange: ${exportRange}\nFormat: ${exportFormat}\nGenerated: ${new Date().toISOString()}\n--- Mock Data ---\nUsers: 2847\nSessions: 18432\nConversions: 1247\nRevenue: $84520\n`;
-                  const blob = new Blob([content], { type: "text/plain" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `reporte_${exportType}_${exportRange}.${exportFormat === "excel" ? "xlsx" : exportFormat}`;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
+                // Prepare report data
+                const reportTypeName = {
+                  general: language === "en" ? "General Performance" : "Rendimiento General",
+                  conversions: language === "en" ? "Conversions" : "Conversiones",
+                  campaigns: language === "en" ? "Campaigns" : "Campañas",
+                  billing: language === "en" ? "Billing" : "Facturación",
+                }[exportType as "general" | "conversions" | "campaigns" | "billing"] || "Reporte";
+
+                const dateRangeName = {
+                  "7days": language === "en" ? "Last 7 Days" : "Últimos 7 días",
+                  "30days": language === "en" ? "Last 30 Days" : "Últimos 30 días",
+                  "month": language === "en" ? "This Month" : "Este Mes",
+                }[exportRange as "7days" | "30days" | "month"] || exportRange;
+
+                const reportData = [
+                  { Metrica: language === "en" ? "Users" : "Usuarios", Valor: "2,847", Cambio: "+12.5%" },
+                  { Metrica: language === "en" ? "Sessions" : "Sesiones", Valor: "18,432", Cambio: "+8.2%" },
+                  { Metrica: language === "en" ? "Conversions" : "Conversiones", Valor: "1,247", Cambio: "+24.1%" },
+                  { Metrica: language === "en" ? "Revenue" : "Ingresos", Valor: "$84,520", Cambio: "-3.1%" }
+                ];
+
+                try {
+                  if (exportFormat === "pdf") {
+                    const { jsPDF } = await import("jspdf");
+                    const doc = new jsPDF();
+
+                    // Header styling
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(20);
+                    doc.setTextColor(124, 58, 237); // Primary (#7C3AED)
+                    doc.text(reportTypeName, 14, 20);
+
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(10);
+                    doc.setTextColor(100);
+                    doc.text(`${language === "en" ? "Range" : "Rango"}: ${dateRangeName}`, 14, 28);
+                    doc.text(`${language === "en" ? "Generated" : "Generado"}: ${new Date().toLocaleString()}`, 14, 34);
+
+                    doc.setDrawColor(220);
+                    doc.line(14, 40, 196, 40);
+
+                    // Table headers
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(12);
+                    doc.setTextColor(0);
+                    doc.text(language === "en" ? "Metric" : "Métrica", 14, 50);
+                    doc.text(language === "en" ? "Value" : "Valor", 100, 50);
+                    doc.text(language === "en" ? "Change" : "Cambio", 160, 50);
+
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(11);
+                    let y = 60;
+                    reportData.forEach(row => {
+                      doc.text(row.Metrica, 14, y);
+                      doc.text(row.Valor, 100, y);
+                      doc.text(row.Cambio, 160, y);
+                      doc.line(14, y + 2, 196, y + 2);
+                      y += 12;
+                    });
+
+                    doc.save(`reporte_${exportType}_${exportRange}.pdf`);
+                  } else if (exportFormat === "excel") {
+                    const XLSX = await import("xlsx");
+                    const wsData = [
+                      [language === "en" ? "Report" : "Reporte", reportTypeName],
+                      [language === "en" ? "Date Range" : "Rango de Fechas", dateRangeName],
+                      [language === "en" ? "Generation Date" : "Fecha de Generación", new Date().toLocaleString()],
+                      [],
+                      [language === "en" ? "Metric" : "Métrica", language === "en" ? "Value" : "Valor", language === "en" ? "Change" : "Cambio"],
+                      ...reportData.map(r => [r.Metrica, r.Valor, r.Cambio])
+                    ];
+                    const ws = XLSX.utils.aoa_to_sheet(wsData);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Summary");
+                    XLSX.writeFile(wb, `reporte_${exportType}_${exportRange}.xlsx`);
+                  } else {
+                    // CSV format with UTF-8 BOM to prevent character corruption
+                    const bom = "\uFEFF";
+                    let csvContent = bom + `${language === "en" ? "Metric" : "Métrica"};${language === "en" ? "Value" : "Valor"};${language === "en" ? "Change" : "Cambio"}\n`;
+                    reportData.forEach(row => {
+                      csvContent += `${row.Metrica};${row.Valor};${row.Cambio}\n`;
+                    });
+                    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `reporte_${exportType}_${exportRange}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  }
 
                   const newAct = {
                     id: `a-${Date.now()}`,
                     userEn: profile.userName || "Admin",
                     userEs: profile.userName || "Admin",
                     initials: profile.userInitials || "AD",
-                    actionEn: `exported ${reportTypeName} report in ${exportFormat.toUpperCase()}`,
-                    actionEs: `exportó el informe de ${reportTypeName} en ${exportFormat.toUpperCase()}`,
+                    actionEn: `exported ${reportTypeName} report`,
+                    actionEs: `exportó el informe de ${reportTypeName}`,
                     time: language === "en" ? "Just now" : "Ahora mismo",
                     gradient: "from-accent-blue to-primary",
                   };
@@ -668,9 +743,16 @@ export function DashboardContent() {
                       : "¡Informe generado y descargado!",
                     type: "success",
                   });
+                } catch (error) {
+                  console.error("Export error:", error);
+                  setToast({
+                    message: language === "en" ? "Error exporting report" : "Error al exportar el informe",
+                    type: "error",
+                  });
+                } finally {
                   setActiveModal(null);
                   setIsExporting(false);
-                }, 1500);
+                }
               }}
               className="space-y-4"
             >

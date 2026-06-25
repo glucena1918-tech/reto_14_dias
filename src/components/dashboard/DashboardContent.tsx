@@ -1,6 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useUserProfile } from "@/context/UserProfileContext";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GlowButton } from "@/components/ui/GlowButton";
 import {
@@ -13,7 +15,8 @@ import {
   Plus,
   Download,
   Send,
-  Settings,
+  X,
+  CheckCircle,
 } from "lucide-react";
 
 // ─── Static mock data (no Math.random / Date.now) ───
@@ -278,6 +281,36 @@ function BarChart({
 // ─── Main Dashboard Content ───
 export function DashboardContent() {
   const { language } = useTranslation();
+  const { profile } = useUserProfile();
+
+  // State variables for quick actions and activity stream
+  const [activeModal, setActiveModal] = useState<"campaign" | "export" | "invitations" | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "info" | "error" } | null>(null);
+  const [activities, setActivities] = useState(ACTIVITIES);
+
+  // Form states
+  const [campaignName, setCampaignName] = useState("");
+  const [campaignChannel, setCampaignChannel] = useState("Email");
+  const [campaignAudience, setCampaignAudience] = useState("Todos");
+  const [isSubmittingCampaign, setIsSubmittingCampaign] = useState(false);
+
+  const [exportRange, setExportRange] = useState("7days");
+  const [exportType, setExportType] = useState("general");
+  const [exportFormat, setExportFormat] = useState("pdf");
+  const [isExporting, setIsExporting] = useState(false);
+
+  const [inviteEmails, setInviteEmails] = useState("");
+  const [inviteRole, setInviteRole] = useState("Miembro");
+  const [isSendingInvites, setIsSendingInvites] = useState(false);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 md:p-8 space-y-8 pb-12">
@@ -388,12 +421,16 @@ export function DashboardContent() {
             {language === "en" ? "Quick Actions" : "Acciones Rápidas"}
           </h2>
           <div className="space-y-3">
-            <GlowButton className="w-full flex items-center justify-center gap-2 py-2.5 text-xs">
+            <GlowButton
+              onClick={() => setActiveModal("campaign")}
+              className="w-full flex items-center justify-center gap-2 py-2.5 text-xs"
+            >
               <Plus size={15} />
               {language === "en" ? "New Campaign" : "Nueva Campaña"}
             </GlowButton>
             <GlowButton
               variant="ghost"
+              onClick={() => setActiveModal("export")}
               className="w-full flex items-center justify-center gap-2 py-2.5 text-xs"
             >
               <Download size={15} />
@@ -401,17 +438,11 @@ export function DashboardContent() {
             </GlowButton>
             <GlowButton
               variant="ghost"
+              onClick={() => setActiveModal("invitations")}
               className="w-full flex items-center justify-center gap-2 py-2.5 text-xs"
             >
               <Send size={15} />
               {language === "en" ? "Send Invitations" : "Enviar Invitaciones"}
-            </GlowButton>
-            <GlowButton
-              variant="ghost"
-              className="w-full flex items-center justify-center gap-2 py-2.5 text-xs"
-            >
-              <Settings size={15} />
-              {language === "en" ? "App Settings" : "Configuración"}
             </GlowButton>
           </div>
         </GlassCard>
@@ -427,7 +458,7 @@ export function DashboardContent() {
             </button>
           </div>
           <div className="space-y-1">
-            {ACTIVITIES.map((activity, idx) => (
+            {activities.map((activity, idx) => (
               <div
                 key={activity.id}
                 className="flex items-start gap-3 py-3 border-b border-base-content/5 last:border-0"
@@ -439,7 +470,7 @@ export function DashboardContent() {
                   >
                     {activity.initials}
                   </div>
-                  {idx < ACTIVITIES.length - 1 && (
+                  {idx < activities.length - 1 && (
                     <div className="w-px h-6 bg-base-content/5 mt-1" />
                   )}
                 </div>
@@ -471,6 +502,321 @@ export function DashboardContent() {
           </div>
         </GlassCard>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border border-white/10 shadow-2xl bg-base-300/80 backdrop-blur-xl animate-fade-in animate-pulse-glow">
+          <CheckCircle className="text-green-400 w-5 h-5 shrink-0" />
+          <span className="text-sm font-medium text-base-content">{toast.message}</span>
+          <button
+            onClick={() => setToast(null)}
+            className="text-base-content/40 hover:text-base-content/75 transition-colors cursor-pointer"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* ─── Modals ─── */}
+      {activeModal === "campaign" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <GlassCard className="w-full max-w-md p-6 sm:p-8 relative animate-fade-in">
+            <button
+              onClick={() => setActiveModal(null)}
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-base-content/40 hover:text-base-content/70 hover:bg-white/5 transition-colors cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+            <h3 className="text-lg font-bold gradient-text mb-6">
+              {language === "en" ? "Create New Campaign" : "Crear Nueva Campaña"}
+            </h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!campaignName.trim()) return;
+                setIsSubmittingCampaign(true);
+                setTimeout(() => {
+                  const newAct = {
+                    id: `a-${Date.now()}`,
+                    userEn: profile.userName || "Admin",
+                    userEs: profile.userName || "Admin",
+                    initials: profile.userInitials || "AD",
+                    actionEn: `created campaign "${campaignName}" (${campaignChannel})`,
+                    actionEs: `creó la campaña "${campaignName}" (${campaignChannel})`,
+                    time: language === "en" ? "Just now" : "Ahora mismo",
+                    gradient: "from-primary to-accent-pink",
+                  };
+                  setActivities([newAct, ...activities]);
+                  setToast({
+                    message: language === "en"
+                      ? `Campaign "${campaignName}" created successfully!`
+                      : `¡Campaña "${campaignName}" creada con éxito!`,
+                    type: "success",
+                  });
+                  setActiveModal(null);
+                  setCampaignName("");
+                  setIsSubmittingCampaign(false);
+                }, 1200);
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-2">
+                  {language === "en" ? "Campaign Name" : "Nombre de la Campaña"}
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder={language === "en" ? "Summer Sale 2026..." : "Oferta de Verano 2026..."}
+                  value={campaignName}
+                  onChange={(e) => setCampaignName(e.target.value)}
+                  className="w-full px-4 py-3 text-sm text-base-content placeholder-base-content/30 glass-input"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-2">
+                    {language === "en" ? "Channel" : "Canal"}
+                  </label>
+                  <select
+                    value={campaignChannel}
+                    onChange={(e) => setCampaignChannel(e.target.value)}
+                    className="w-full px-3 py-3 text-sm text-base-content bg-base-300 border border-white/10 rounded-xl focus:border-primary/50 focus:outline-none cursor-pointer"
+                  >
+                    <option value="Email">Email</option>
+                    <option value="SMS">SMS</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Push">Push</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-2">
+                    {language === "en" ? "Target Audience" : "Audiencia Objetivo"}
+                  </label>
+                  <select
+                    value={campaignAudience}
+                    onChange={(e) => setCampaignAudience(e.target.value)}
+                    className="w-full px-3 py-3 text-sm text-base-content bg-base-300 border border-white/10 rounded-xl focus:border-primary/50 focus:outline-none cursor-pointer"
+                  >
+                    <option value="Todos">{language === "en" ? "All Users" : "Todos los usuarios"}</option>
+                    <option value="Premium">{language === "en" ? "Premium Customers" : "Clientes Premium"}</option>
+                    <option value="Inactivos">{language === "en" ? "Inactive Users" : "Usuarios inactivos"}</option>
+                  </select>
+                </div>
+              </div>
+              <div className="pt-4">
+                <GlowButton type="submit" disabled={isSubmittingCampaign} className="w-full py-3">
+                  {isSubmittingCampaign
+                    ? (language === "en" ? "Creating..." : "Creando...")
+                    : (language === "en" ? "Create Campaign" : "Crear Campaña")}
+                </GlowButton>
+              </div>
+            </form>
+          </GlassCard>
+        </div>
+      )}
+
+      {activeModal === "export" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <GlassCard className="w-full max-w-md p-6 sm:p-8 relative animate-fade-in">
+            <button
+              onClick={() => setActiveModal(null)}
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-base-content/40 hover:text-base-content/70 hover:bg-white/5 transition-colors cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+            <h3 className="text-lg font-bold gradient-text mb-6">
+              {language === "en" ? "Export Performance Report" : "Exportar Informe de Rendimiento"}
+            </h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setIsExporting(true);
+                setTimeout(() => {
+                  const reportTypeName = {
+                    general: language === "en" ? "General Performance" : "Rendimiento General",
+                    conversions: language === "en" ? "Conversions" : "Conversiones",
+                    campaigns: language === "en" ? "Campaigns" : "Campañas",
+                    billing: language === "en" ? "Billing" : "Facturación",
+                  }[exportType as "general" | "conversions" | "campaigns" | "billing"];
+
+                  const content = `Report: ${reportTypeName}\nRange: ${exportRange}\nFormat: ${exportFormat}\nGenerated: ${new Date().toISOString()}\n--- Mock Data ---\nUsers: 2847\nSessions: 18432\nConversions: 1247\nRevenue: $84520\n`;
+                  const blob = new Blob([content], { type: "text/plain" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `reporte_${exportType}_${exportRange}.${exportFormat === "excel" ? "xlsx" : exportFormat}`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+
+                  const newAct = {
+                    id: `a-${Date.now()}`,
+                    userEn: profile.userName || "Admin",
+                    userEs: profile.userName || "Admin",
+                    initials: profile.userInitials || "AD",
+                    actionEn: `exported ${reportTypeName} report in ${exportFormat.toUpperCase()}`,
+                    actionEs: `exportó el informe de ${reportTypeName} en ${exportFormat.toUpperCase()}`,
+                    time: language === "en" ? "Just now" : "Ahora mismo",
+                    gradient: "from-accent-blue to-primary",
+                  };
+                  setActivities([newAct, ...activities]);
+                  setToast({
+                    message: language === "en"
+                      ? "Report generated and downloaded!"
+                      : "¡Informe generado y descargado!",
+                    type: "success",
+                  });
+                  setActiveModal(null);
+                  setIsExporting(false);
+                }, 1500);
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-2">
+                  {language === "en" ? "Report Type" : "Tipo de Informe"}
+                </label>
+                <select
+                  value={exportType}
+                  onChange={(e) => setExportType(e.target.value)}
+                  className="w-full px-3 py-3 text-sm text-base-content bg-base-300 border border-white/10 rounded-xl focus:border-primary/50 focus:outline-none cursor-pointer"
+                >
+                  <option value="general">{language === "en" ? "General Performance" : "Rendimiento General"}</option>
+                  <option value="conversions">{language === "en" ? "Conversions" : "Conversiones"}</option>
+                  <option value="campaigns">{language === "en" ? "Campañas" : "Campañas"}</option>
+                  <option value="billing">{language === "en" ? "Facturación y Recibos" : "Facturación y Recibos"}</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-2">
+                    {language === "en" ? "Date Range" : "Rango de Fechas"}
+                  </label>
+                  <select
+                    value={exportRange}
+                    onChange={(e) => setExportRange(e.target.value)}
+                    className="w-full px-3 py-3 text-sm text-base-content bg-base-300 border border-white/10 rounded-xl focus:border-primary/50 focus:outline-none cursor-pointer"
+                  >
+                    <option value="7days">{language === "en" ? "Last 7 Days" : "Últimos 7 días"}</option>
+                    <option value="30days">{language === "en" ? "Last 30 Days" : "Últimos 30 días"}</option>
+                    <option value="month">{language === "en" ? "This Month" : "Este Mes"}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-2">
+                    {language === "en" ? "Format" : "Formato"}
+                  </label>
+                  <select
+                    value={exportFormat}
+                    onChange={(e) => setExportFormat(e.target.value)}
+                    className="w-full px-3 py-3 text-sm text-base-content bg-base-300 border border-white/10 rounded-xl focus:border-primary/50 focus:outline-none cursor-pointer"
+                  >
+                    <option value="pdf">PDF</option>
+                    <option value="csv">CSV</option>
+                    <option value="excel">Excel (XLSX)</option>
+                  </select>
+                </div>
+              </div>
+              <div className="pt-4">
+                <GlowButton type="submit" disabled={isExporting} className="w-full py-3">
+                  {isExporting
+                    ? (language === "en" ? "Generating..." : "Generando...")
+                    : (language === "en" ? "Export Report" : "Exportar Informe")}
+                </GlowButton>
+              </div>
+            </form>
+          </GlassCard>
+        </div>
+      )}
+
+      {activeModal === "invitations" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <GlassCard className="w-full max-w-md p-6 sm:p-8 relative animate-scale-in">
+            <button
+              onClick={() => setActiveModal(null)}
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-base-content/40 hover:text-base-content/70 hover:bg-white/5 transition-colors cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+            <h3 className="text-lg font-bold gradient-text mb-6">
+              {language === "en" ? "Invite Team Members" : "Invitar Miembros al Equipo"}
+            </h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!inviteEmails.trim()) return;
+                setIsSendingInvites(true);
+                setTimeout(() => {
+                  const emails = inviteEmails.split(",").map(e => e.trim()).filter(Boolean);
+                  const count = emails.length || 1;
+
+                  const newAct = {
+                    id: `a-${Date.now()}`,
+                    userEn: profile.userName || "Admin",
+                    userEs: profile.userName || "Admin",
+                    initials: profile.userInitials || "AD",
+                    actionEn: `invited ${count} new member(s) as ${inviteRole}`,
+                    actionEs: `invitó a ${count} nuevo(s) miembro(s) como ${inviteRole}`,
+                    time: language === "en" ? "Just now" : "Ahora mismo",
+                    gradient: "from-accent-warm to-accent-pink",
+                  };
+                  setActivities([newAct, ...activities]);
+                  setToast({
+                    message: language === "en"
+                      ? `Sent ${count} invitation(s) successfully!`
+                      : `¡Se enviaron ${count} invitación(es) con éxito!`,
+                    type: "success",
+                  });
+                  setActiveModal(null);
+                  setInviteEmails("");
+                  setIsSendingInvites(false);
+                }, 1200);
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-2">
+                  {language === "en" ? "Email Addresses" : "Correos Electrónicos"}
+                </label>
+                <textarea
+                  required
+                  placeholder={language === "en" ? "email1@example.com, email2@example.com..." : "correo1@ejemplo.com, correo2@ejemplo.com..."}
+                  value={inviteEmails}
+                  onChange={(e) => setInviteEmails(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 text-sm text-base-content placeholder-base-content/30 glass-input resize-none focus:outline-none"
+                />
+                <p className="text-[10px] text-base-content/40 mt-1">
+                  {language === "en" ? "Separate multiple emails with commas" : "Separa múltiples correos con comas"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-2">
+                  {language === "en" ? "Role" : "Rol asignado"}
+                </label>
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value)}
+                  className="w-full px-3 py-3 text-sm text-base-content bg-base-300 border border-white/10 rounded-xl focus:border-primary/50 focus:outline-none cursor-pointer"
+                >
+                  <option value="Miembro">{language === "en" ? "Member" : "Miembro"}</option>
+                  <option value="Administrador">{language === "en" ? "Admin" : "Administrador"}</option>
+                  <option value="Visualizador">{language === "en" ? "Viewer" : "Visualizador"}</option>
+                </select>
+              </div>
+              <div className="pt-4">
+                <GlowButton type="submit" disabled={isSendingInvites} className="w-full py-3">
+                  {isSendingInvites
+                    ? (language === "en" ? "Sending..." : "Enviando...")
+                    : (language === "en" ? "Send Invitations" : "Enviar Invitaciones")}
+                </GlowButton>
+              </div>
+            </form>
+          </GlassCard>
+        </div>
+      )}
     </div>
   );
 }

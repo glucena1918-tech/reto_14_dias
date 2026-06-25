@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
+import { headers } from "next/headers";
 
 export async function inviteUser(email: string, role: string) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -18,13 +19,19 @@ export async function inviteUser(email: string, role: string) {
     },
   });
 
+  // Dynamically resolve site URL from request headers (works for localhost and Vercel)
+  const headersList = await headers();
+  const host = headersList.get("host") || "localhost:3000";
+  const protocol = host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https";
+  const siteUrl = `${protocol}://${host}`;
+
   // Call the inviteUserByEmail admin method
   const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
     data: {
       role: role,
     },
     // Dynamically direct user back to the application auth callback
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/auth/callback`,
+    redirectTo: `${siteUrl}/auth/callback`,
   });
 
   if (error) {

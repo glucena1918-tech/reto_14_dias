@@ -16,11 +16,78 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* ── Light Theme Override ── */
+[data-theme="light"] {
+  --color-background: #F8F6FF;
+  --color-foreground: #1A1035;
+  --color-base-100: #F8F6FF;
+  --color-base-200: #EFEBFA;
+  --color-base-300: #E0DBF0;
+  --color-base-content: #1A1035;
+  --color-primary: #7C3AED;
+  --color-primary-content: #FFFFFF;
+  --color-accent-warm: #EA580C;
+  --color-accent-pink: #DB2777;
+  --color-accent-blue: #0284C7;
+}
+
+[data-theme="light"] .glass-card {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .glass-input {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .glass-input:focus {
+  border-color: rgba(124, 58, 237, 0.5);
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.1);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: var(--color-base-100);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: var(--color-base-300);
+}
+
+/* ── Font Size Scaling ── */
+html.font-size-small {
+  font-size: 14px;
+}
+
+html.font-size-medium {
+  font-size: 16px;
+}
+
+html.font-size-large {
+  font-size: 18px;
+}
+
+/* ── Reduce Motion ── */
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* ── Compact Mode ── */
+html.compact-mode .glass-card {
+  padding: 0.75rem;
+}
+
 /* ── Base ── */
 body {
   background: var(--color-base-100);
   color: var(--color-base-content);
   font-family: var(--font-sans), system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ── Glassmorphism utilities ── */

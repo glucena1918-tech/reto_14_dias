@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { SettingsProvider } from "@/context/SettingsContext";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import "./globals.css";
 
@@ -33,9 +34,12 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-base-100 text-base-content" suppressHydrationWarning>
         <LanguageProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <SettingsProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </SettingsProvider>
         </LanguageProvider>
       </body>
     </html>
   );
 }
+

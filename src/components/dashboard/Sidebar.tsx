@@ -9,7 +9,6 @@ import {
   ChevronsLeft,
   ChevronsRight,
   X,
-  Sparkles,
   User,
   CreditCard,
   Settings,
@@ -69,16 +68,26 @@ export function Sidebar({
     return (
       <div className="flex flex-col h-full">
         {/* Logo / App Name */}
-        <div className="flex items-center gap-3 px-4 h-16 shrink-0 border-b border-white/5">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-linear-to-br from-primary to-accent-pink shrink-0">
-            <Sparkles size={16} className="text-white" />
+        <Link
+          href="/"
+          onClick={() => {
+            if (isMobile) onCloseMobile();
+          }}
+          className="flex items-center gap-3 px-4 h-16 shrink-0 border-b border-white/5 hover:opacity-85 transition-opacity duration-200 cursor-pointer"
+        >
+          <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-base-content/10 shrink-0 bg-base-300 flex items-center justify-center">
+            <img
+              src="/logo.jpg"
+              alt="GL Logo"
+              className="w-full h-full object-cover"
+            />
           </div>
           {showLabels && (
             <span className="text-sm font-bold text-base-content tracking-wide whitespace-nowrap">
               Micro-Apps
             </span>
           )}
-        </div>
+        </Link>
 
         {/* Navigation */}
         <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">

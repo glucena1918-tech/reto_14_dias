@@ -849,7 +849,17 @@ export function DashboardContent() {
                         lastActionLink = result.actionLink;
                       }
                     } else {
-                      lastError = result.error || "Unknown error";
+                      if (result.error === "already_registered") {
+                        lastError = language === "en"
+                          ? "This email is already registered."
+                          : "Este correo ya está registrado en la plataforma.";
+                      } else if (result.error === "invalid_email") {
+                        lastError = language === "en"
+                          ? "Invalid email address format."
+                          : "El formato de correo no es válido.";
+                      } else {
+                        lastError = result.error || "Unknown error";
+                      }
                     }
                   } catch (err: any) {
                     console.error("Invite call failed:", err);

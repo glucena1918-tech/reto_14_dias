@@ -57,8 +57,26 @@ export async function inviteUser(email: string, role: string) {
   if (inviteResult.error) {
     console.error("Supabase email delivery failed:", inviteResult.error);
     
-    // If email sending failed (e.g. rate limit), but we generated the fallback link,
-    // we return success along with the link so the administrator can invite them manually!
+    const errorMsg = inviteResult.error.message.toLowerCase();
+    let friendlyError = inviteResult.error.message;
+    
+    if (
+      errorMsg.includes("already been registered") || 
+      errorMsg.includes("already registered") || 
+      errorMsg.includes("already exists") ||
+      inviteResult.error.status === 422
+    ) {
+      friendlyError = "already_registered";
+    } else if (errorMsg.includes("validate") || errorMsg.includes("invalid")) {
+      friendlyError = "invalid_email";
+    }
+    
+    // If the user already exists, we must not return a fallback link because they cannot register again
+    if (friendlyError === "already_registered") {
+      return { success: false, error: friendlyError };
+    }
+
+    // For other email delivery failures (e.g. rate limit), return success using the backup link
     if (actionLink) {
       return { 
         success: true, 
@@ -67,7 +85,7 @@ export async function inviteUser(email: string, role: string) {
       };
     }
     
-    return { success: false, error: inviteResult.error.message };
+    return { success: false, error: friendlyError };
   }
 
   return { success: true, data: inviteResult.data, actionLink };

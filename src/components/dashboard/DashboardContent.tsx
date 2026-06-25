@@ -1027,9 +1027,12 @@ export function DashboardContent() {
                     onClick={() => {
                       navigator.clipboard.writeText(generatedLink);
                       setToast({
-                        message: language === "en" ? "Copied! Open Instagram to paste." : "¡Copiado! Abre Instagram para pegar el enlace.",
+                        message: language === "en" 
+                          ? "Link copied! Opening Instagram Direct Inbox..." 
+                          : "¡Enlace copiado! Abriendo los Mensajes Directos de Instagram...",
                         type: "success",
                       });
+                      window.open("https://www.instagram.com/direct/inbox/", "_blank", "noopener,noreferrer");
                     }}
                     className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#E1306C]/10 text-[#E1306C] hover:bg-[#E1306C]/20 transition-all duration-300 border border-[#E1306C]/20 hover:shadow-[0_0_15px_rgba(225,48,108,0.3)] cursor-pointer"
                     title="Instagram DM"

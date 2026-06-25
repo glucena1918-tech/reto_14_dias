@@ -16,6 +16,7 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  CreditCard,
 } from "lucide-react";
 
 interface HeaderProps {
@@ -260,6 +261,14 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
                   <Settings size={16} />
                   {language === "en" ? "Settings" : "Configuración"}
                 </button>
+                <Link
+                  href="/billing"
+                  onClick={() => setProfileOpen(false)}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-base-content/60 hover:text-base-content hover:bg-white/5 transition-all cursor-pointer"
+                >
+                  <CreditCard size={16} />
+                  {language === "en" ? "Plans & Billing" : "Planes y Facturación"}
+                </Link>
               </div>
 
               {/* Logout */}

@@ -11,6 +11,7 @@ import {
   X,
   Sparkles,
   User,
+  CreditCard,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -42,6 +43,11 @@ export function Sidebar({
       href: "/profile",
       label: language === "en" ? "Profile" : "Perfil",
       icon: User,
+    },
+    {
+      href: "/billing",
+      label: language === "en" ? "Plans & Billing" : "Planes y Facturación",
+      icon: CreditCard,
     },
   ];
 

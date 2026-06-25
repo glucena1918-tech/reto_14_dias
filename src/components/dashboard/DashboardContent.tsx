@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useUserProfile } from "@/context/UserProfileContext";
+import { inviteUser } from "@/app/actions/invite";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GlowButton } from "@/components/ui/GlowButton";
 import {
@@ -826,35 +827,71 @@ export function DashboardContent() {
               {language === "en" ? "Invite Team Members" : "Invitar Miembros al Equipo"}
             </h3>
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
                 if (!inviteEmails.trim()) return;
                 setIsSendingInvites(true);
-                setTimeout(() => {
-                  const emails = inviteEmails.split(",").map(e => e.trim()).filter(Boolean);
-                  const count = emails.length || 1;
 
+                const emails = inviteEmails.split(",").map(e => e.trim()).filter(Boolean);
+                const count = emails.length;
+                let successes = 0;
+                let lastError = "";
+
+                // Send invitations using server action
+                for (const email of emails) {
+                  try {
+                    const result = await inviteUser(email, inviteRole);
+                    if (result.success) {
+                      successes++;
+                    } else {
+                      lastError = result.error || "Unknown error";
+                    }
+                  } catch (err: any) {
+                    console.error("Invite call failed:", err);
+                    lastError = err.message || "Failed to call invitation endpoint";
+                  }
+                }
+
+                if (successes > 0) {
                   const newAct = {
                     id: `a-${Date.now()}`,
                     userEn: profile.userName || "Admin",
                     userEs: profile.userName || "Admin",
                     initials: profile.userInitials || "AD",
-                    actionEn: `invited ${count} new member(s) as ${inviteRole}`,
-                    actionEs: `invitó a ${count} nuevo(s) miembro(s) como ${inviteRole}`,
+                    actionEn: `invited ${successes} new member(s) as ${inviteRole}`,
+                    actionEs: `invitó a ${successes} nuevo(s) miembro(s) como ${inviteRole}`,
                     time: language === "en" ? "Just now" : "Ahora mismo",
                     gradient: "from-accent-warm to-accent-pink",
                   };
                   setActivities([newAct, ...activities]);
+                  
+                  if (successes === count) {
+                    setToast({
+                      message: language === "en"
+                        ? `Sent ${successes} invitation(s) successfully!`
+                        : `¡Se enviaron ${successes} invitación(es) con éxito!`,
+                      type: "success",
+                    });
+                  } else {
+                    setToast({
+                      message: language === "en"
+                        ? `Sent ${successes} of ${count} invitation(s). Error: ${lastError}`
+                        : `Se enviaron ${successes} de ${count} invitación(es). Error: ${lastError}`,
+                      type: "info",
+                    });
+                  }
+                } else {
                   setToast({
                     message: language === "en"
-                      ? `Sent ${count} invitation(s) successfully!`
-                      : `¡Se enviaron ${count} invitación(es) con éxito!`,
-                    type: "success",
+                      ? `Failed to send invitations: ${lastError}`
+                      : `Error al enviar las invitaciones: ${lastError}`,
+                    type: "error",
                   });
-                  setActiveModal(null);
-                  setInviteEmails("");
-                  setIsSendingInvites(false);
-                }, 1200);
+                }
+
+                setActiveModal(null);
+                setInviteEmails("");
+                setIsSendingInvites(false);
               }}
               className="space-y-4"
             >

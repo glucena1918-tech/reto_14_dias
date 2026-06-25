@@ -176,7 +176,7 @@ function LineChart({
             y1={padding + (i / 3) * chartHeight}
             x2={padding + chartWidth}
             y2={padding + (i / 3) * chartHeight}
-            stroke="rgba(255,255,255,0.04)"
+            className="stroke-base-content/5"
             strokeWidth="0.3"
           />
         ))}
@@ -220,7 +220,7 @@ function LineChart({
               x={x}
               y={height + 8}
               textAnchor="middle"
-              fill="rgba(232,224,255,0.3)"
+              className="fill-base-content/30"
               fontSize="3"
               fontFamily="inherit"
             >
@@ -259,7 +259,7 @@ function BarChart({
             <span className="text-[10px] text-base-content/40 font-medium">
               {val}%
             </span>
-            <div className="w-full relative rounded-t-lg overflow-hidden bg-white/3" style={{ height: "120px" }}>
+            <div className="w-full relative rounded-t-lg overflow-hidden bg-base-content/[0.03]" style={{ height: "120px" }}>
               <div
                 className={`absolute bottom-0 w-full rounded-t-lg bg-linear-to-t ${barColors[i]} transition-all duration-500`}
                 style={{ height: `${heightPct}%` }}
@@ -298,7 +298,7 @@ export function DashboardContent() {
         {STATS.map((stat) => {
           const Icon = stat.icon;
           return (
-            <GlassCard key={stat.id} className="p-5 sm:p-6 group hover:border-white/15 transition-all duration-300">
+            <GlassCard key={stat.id} className="p-5 sm:p-6 group hover:border-base-content/10 transition-all duration-300">
               <div className="flex items-start justify-between mb-4">
                 <div
                   className={`w-10 h-10 rounded-xl bg-linear-to-br ${stat.gradient} flex items-center justify-center opacity-80 group-hover:opacity-100 transition-opacity`}
@@ -430,7 +430,7 @@ export function DashboardContent() {
             {ACTIVITIES.map((activity, idx) => (
               <div
                 key={activity.id}
-                className="flex items-start gap-3 py-3 border-b border-white/5 last:border-0"
+                className="flex items-start gap-3 py-3 border-b border-base-content/5 last:border-0"
               >
                 {/* Timeline indicator */}
                 <div className="flex flex-col items-center shrink-0">
@@ -440,7 +440,7 @@ export function DashboardContent() {
                     {activity.initials}
                   </div>
                   {idx < ACTIVITIES.length - 1 && (
-                    <div className="w-px h-6 bg-white/5 mt-1" />
+                    <div className="w-px h-6 bg-base-content/5 mt-1" />
                   )}
                 </div>
 
